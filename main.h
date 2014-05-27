@@ -1,6 +1,6 @@
 #ifndef XXX
 #define XXX
-
+#include "util.h"
 const int num_topic = 5;
 const double alpha = 50.0/num_topic;
 const double beta = 0.01;
@@ -33,18 +33,6 @@ int get_topic(int m, int word, int num_word, int ** & doc_topic, int ** & topic_
 
 void quicksort(std::vector<std::pair<int, double> > & vect, int left, int right) ;
 
-int **create_int_matrix(int , int );
-
-template<typename T>
-void clear_matrix(T , int );
-
-template<typename T>
-void clear_array(T );
-
-template<typename T>
-void clear_mvector( T , int );
-
-double **create_double_matrix(int , int );
 
 void save_model(int num_term, double ** &phi);
 
