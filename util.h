@@ -8,6 +8,7 @@ namespace util{
     //void quicksort(std::vector<std::pair<int, double> > & vect, int left, int right); 
 
     int get_id(std::string, maps &, mapi&);
+    int get_id(std::string , maps &);
     std::string get_word(int , mapi &);
     typedef std::vector< int > my_array;
     typedef std::vector< my_array > matrix;

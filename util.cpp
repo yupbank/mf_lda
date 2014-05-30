@@ -30,6 +30,16 @@ double ** util::create_double_matrix(int x, int y)
     
 }
 
+int util::get_id(string user_num, maps &dict){
+    auto it = dict.begin();
+    it = dict.find(user_num);
+    if (it == dict.end()) {
+        return -1;
+    } else{
+        return it->second;
+    }
+}
+
 int util::get_id(string user_num, maps &dict, mapi& dict1){
     auto it = dict.begin();
     it = dict.find(user_num);
