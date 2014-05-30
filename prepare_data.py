@@ -145,11 +145,16 @@ delEStr = delEStr.replace('\'', '')
 table = string.maketrans(delEStr, ' '*len(delEStr))
 def load_data():
     for line in sys.stdin:
-        line = line.strip()
-        line = line.translate(table)
-        line = line.lower()
-        line = line.replace('  ', ' ')
-        print ' '.join([i for i in line.split() if i not in stop])
+        if len(line.strip().split()) > 3:
+            total = line.strip().split(' ',3)
+            user =total [0]
+            item = total[1]
+            rate = total[2]
+            line = total[-1]
+            line = line.translate(table)
+            line = line.lower()
+            line = line.replace('  ', ' ')
+            print user, item, rate,' '.join([i for i in line.split() if i not in stop])
 
 if __name__ == "__main__":
     load_data()
