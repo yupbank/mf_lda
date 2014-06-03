@@ -15,14 +15,15 @@
 using namespace std;
 using namespace util;
 
-const int topic_num = 10;
+const int topic_num = 5;
 const double feature_scaler = 1.0;
-const double alpha = 50.0/topic_num;
 const double learning_rate = 0.01;
 const double reg_0 = 0;
 const double reg_1 = 0.05;
+const double alpha = 50.0/topic_num;
 const double beta = 0.01; // for lda
 const int total_steps = 10;
+const double reg_likelihood = 0.5;
 
 inline double squareloss(double p, double y)
 {
@@ -77,14 +78,26 @@ int main()
     int *topic_sum = new int[topic_num]();
 
     //int *doc_sum = new int[num_doc]();
-    double **doc_topic_probrability = create_double_matrix(doc_num, topic_num);
+    double **doc_topic_probrability = create_double_matrix(item_num, topic_num);
     double **topic_term_probrability = create_double_matrix(topic_num, term_num);
 
     sgd::instance_type test_instances;
     mapi test_id2user;
     mapi test_id2item;
     load_test_data(test_instances, test_id2user, test_id2item);
-
+    
+    for (int m=0; m<doc_num; m++)
+    {
+        my_array inner_z;
+        for (auto &word :docs[m])
+        {
+            int new_topic = lda::get_topic();
+            topic_term[new_topic][word] += 1;
+            topic_sum[new_topic] += 1;
+            inner_z.push_back(new_topic);
+        }
+        z.push_back(inner_z);
+    }
     init_z(docs, z, doc_num, topic_term, topic_sum);
     for(int i =0; i< total_steps; i++)
     {
@@ -93,6 +106,7 @@ int main()
         lda_part(instances, docs, z, topic_term, topic_sum, doc_num, topic_num, term_num, doc_topic_probrability, topic_term_probrability, id2word);
 
         nmf_part(instances, docs, z, user_feature, item_feature, user_bias, item_bias, glob_bias, user_num, item_num, doc_topic_probrability, topic_term_probrability);
+
         test(test_instances, test_id2user, test_id2item, user2id, item2id,  user_feature, item_feature, user_bias, item_bias, glob_bias);
     }
     return 0;
@@ -131,16 +145,20 @@ void test(sgd::instance_type & test_instances, mapi & test_id2user, mapi & test_
             sumloss += squareloss(pred, rating);
             count ++;
         }
+        /*else
+        {
+            cout<<user_name<<" "<<item_name<<endl; 
+        }*/
 
     }
     cout<<endl;
     printf("test rmse (%f) cout (%d) \n", sqrt(sumloss/count), count);
 }
 
-void init_z(matrix & docs, matrix & z, int num_doc, int ** & topic_term, int * & topic_sum)
+void init_z(matrix & docs, matrix & z, int doc_num, int ** & topic_term, int * & topic_sum)
 {
     srandom(time(0));
-    for (int m=0; m<num_doc; m++)
+    for (int m=0; m<doc_num; m++)
     {
         my_array inner_z;
         for (auto &word :docs[m])
@@ -232,20 +250,20 @@ double loss(double p, double y, my_array & doc, my_array & doc_z, int item_id, d
 {
     double first_part = squareloss(p, y);
     double second_part = likelihood(doc, doc_z, item_id, doc_topic_probrability, topic_term_probrability);
-    return first_part + second_part;
+    return first_part - reg_likelihood*second_part;
 }
 
-void hiddenfeature2probablity(double ** & feature, double ** & doc_topic_probrability, int num_item, int topic_num)
+void hiddenfeature2probablity(double ** & item_feature, double ** & doc_topic_probrability, int num_item, int topic_num)
 {
     for (int i=0; i< num_item; i++)
     {
         double sum = 0;
         for (int j=0; j< topic_num; j++)
-            sum += exp(feature_scaler*feature[i][j]);
+            sum += exp(feature_scaler*item_feature[i][j]);
 
         for (int j=0; j< topic_num; j++)
         {
-            doc_topic_probrability[i][j] = exp(feature_scaler*feature[i][j])  / sum;
+            doc_topic_probrability[i][j] = exp(feature_scaler*item_feature[i][j])  / sum;
         }
     }
 }
@@ -259,7 +277,7 @@ double likelihood(my_array & doc, my_array & doc_z, int item_id, double ** & doc
        int k = doc_z[i];
        double topic_prob = doc_topic_probrability[item_id][k];
        double term_prob = topic_term_probrability[k][word];
-       res *=  topic_prob*term_prob;
+       res +=  log(topic_prob*term_prob);
        i++; 
    }
    return res;

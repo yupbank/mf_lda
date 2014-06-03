@@ -3,11 +3,11 @@
 #include "util.h"
 namespace lda
 {
-    const int num_topic = 10;
-    const double alpha = 50.0/num_topic;
-    const double beta = 0.01;
-    const int steps = 5;
-    const int twords = 50;
+     static int num_topic = 5;
+     static double alpha = 50.0/num_topic;
+     static double beta = 0.01;
+     static int steps = 5;
+     static int twords = 50;
 
 
 
